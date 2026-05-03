@@ -1,4 +1,5 @@
 const { DataTypes } = require('sequelize');
+const bcrypt = require('bcryptjs');
 const sequelize = require('../sequelize');
 
 const User = sequelize.define('User', {
@@ -37,6 +38,20 @@ const User = sequelize.define('User', {
   tableName: 'user',
   timestamps: true,
   underscored: true,
+  hooks: {
+    beforeCreate: async (user) => {
+      // Only hash if password_hash is provided and not already hashed
+      if (user.password_hash && !user.password_hash.startsWith('$2')) {
+        user.password_hash = await bcrypt.hash(user.password_hash, 10);
+      }
+    },
+    beforeUpdate: async (user) => {
+      // Only hash if password_hash is changed and not already hashed
+      if (user.changed('password_hash') && !user.password_hash.startsWith('$2')) {
+        user.password_hash = await bcrypt.hash(user.password_hash, 10);
+      }
+    },
+  },
 });
 
 module.exports = User;

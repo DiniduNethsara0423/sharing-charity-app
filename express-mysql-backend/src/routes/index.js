@@ -6,10 +6,14 @@ const donationController = require('../controllers/donationController');
 const chatbotController = require('../controllers/chatbotController');
 const messageController = require('../controllers/messageController');
 const charityController = require('../controllers/charityController');
+const authRoutes = require('./auth');
 
 const router = express.Router();
 
 router.get('/', (req, res) => res.json({ ok: true }));
+
+// Auth routes
+router.use('/auth', authRoutes);
 
 router.get('/users', userController.list);
 router.get('/users/:id', userController.get);
