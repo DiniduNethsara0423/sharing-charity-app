@@ -1,0 +1,135 @@
+const { Message, User, Item } = require('../models');
+const { Op } = require('sequelize');
+
+exports.list = async (req, res, next) => {
+  try {
+    const messages = await Message.findAll({
+      include: [
+        { model: User, as: 'sender', attributes: ['user_id', 'username', 'email'] },
+        { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email'] },
+        { model: Item, as: 'item', attributes: ['item_id', 'title'] },
+      ],
+      order: [['created_at', 'DESC']],
+    });
+    res.json(messages);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.listBySender = async (req, res, next) => {
+  try {
+    const messages = await Message.findAll({
+      where: { sender_id: req.params.senderId },
+      include: [
+        { model: User, as: 'sender', attributes: ['user_id', 'username', 'email'] },
+        { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email'] },
+        { model: Item, as: 'item', attributes: ['item_id', 'title'] },
+      ],
+      order: [['created_at', 'DESC']],
+    });
+    res.json(messages);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.listByReceiver = async (req, res, next) => {
+  try {
+    const messages = await Message.findAll({
+      where: { receiver_id: req.params.receiverId },
+      include: [
+        { model: User, as: 'sender', attributes: ['user_id', 'username', 'email'] },
+        { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email'] },
+        { model: Item, as: 'item', attributes: ['item_id', 'title'] },
+      ],
+      order: [['created_at', 'DESC']],
+    });
+    res.json(messages);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.conversation = async (req, res, next) => {
+  try {
+    const messages = await Message.findAll({
+      where: {
+        [Op.or]: [
+          { sender_id: req.params.userId1, receiver_id: req.params.userId2 },
+          { sender_id: req.params.userId2, receiver_id: req.params.userId1 },
+        ],
+      },
+      include: [
+        { model: User, as: 'sender', attributes: ['user_id', 'username', 'email'] },
+        { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email'] },
+        { model: Item, as: 'item', attributes: ['item_id', 'title'] },
+      ],
+      order: [['created_at', 'ASC']],
+    });
+    res.json(messages);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.get = async (req, res, next) => {
+  try {
+    const message = await Message.findByPk(req.params.id, {
+      include: [
+        { model: User, as: 'sender', attributes: ['user_id', 'username', 'email'] },
+        { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email'] },
+        { model: Item, as: 'item', attributes: ['item_id', 'title'] },
+      ],
+    });
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+    res.json(message);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.create = async (req, res, next) => {
+  try {
+    const message = await Message.create(req.body);
+    const result = await Message.findByPk(message.message_id, {
+      include: [
+        { model: User, as: 'sender', attributes: ['user_id', 'username', 'email'] },
+        { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email'] },
+        { model: Item, as: 'item', attributes: ['item_id', 'title'] },
+      ],
+    });
+    res.status(201).json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.update = async (req, res, next) => {
+  try {
+    const message = await Message.findByPk(req.params.id);
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+    await message.update(req.body);
+    const result = await Message.findByPk(req.params.id, {
+      include: [
+        { model: User, as: 'sender', attributes: ['user_id', 'username', 'email'] },
+        { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email'] },
+        { model: Item, as: 'item', attributes: ['item_id', 'title'] },
+      ],
+    });
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.remove = async (req, res, next) => {
+  try {
+    const message = await Message.findByPk(req.params.id);
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+    await message.destroy();
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+};
