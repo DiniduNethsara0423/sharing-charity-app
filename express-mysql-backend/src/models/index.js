@@ -6,6 +6,7 @@ const Donation = require('./Donation');
 const Message = require('./Message');
 const Charity = require('./Charity');
 const ChatbotQuery = require('./ChatbotQuery');
+const Conversation = require('./Conversation');
 
 // Define Associations
 // User -> Item (one-to-many: user sells items)
@@ -17,6 +18,47 @@ User.hasMany(Item, {
 Item.belongsTo(User, {
   foreignKey: 'seller_id',
   as: 'seller',
+});
+
+// User -> Conversation (one-to-many: chats started or joined by a user)
+User.hasMany(Conversation, {
+  foreignKey: 'participant_one_id',
+  as: 'initiatedConversations',
+  onDelete: 'CASCADE',
+});
+Conversation.belongsTo(User, {
+  foreignKey: 'participant_one_id',
+  as: 'initiator',
+});
+
+User.hasMany(Conversation, {
+  foreignKey: 'participant_two_id',
+  as: 'receivedConversations',
+  onDelete: 'SET NULL',
+});
+Conversation.belongsTo(User, {
+  foreignKey: 'participant_two_id',
+  as: 'recipient',
+});
+
+Charity.hasMany(Conversation, {
+  foreignKey: 'charity_id',
+  as: 'charityConversations',
+  onDelete: 'SET NULL',
+});
+Conversation.belongsTo(Charity, {
+  foreignKey: 'charity_id',
+  as: 'charity',
+});
+
+Item.hasMany(Conversation, {
+  foreignKey: 'item_id',
+  as: 'itemConversations',
+  onDelete: 'SET NULL',
+});
+Conversation.belongsTo(Item, {
+  foreignKey: 'item_id',
+  as: 'item',
 });
 
 // User -> Transaction (one-to-many: user as buyer)
@@ -118,6 +160,16 @@ Message.belongsTo(Item, {
   as: 'item',
 });
 
+Conversation.hasMany(Message, {
+  foreignKey: 'conversation_id',
+  as: 'messages',
+  onDelete: 'SET NULL',
+});
+Message.belongsTo(Conversation, {
+  foreignKey: 'conversation_id',
+  as: 'conversation',
+});
+
 // User -> ChatbotQuery (one-to-many)
 User.hasMany(ChatbotQuery, {
   foreignKey: 'user_id',
@@ -138,4 +190,5 @@ module.exports = {
   Message,
   Charity,
   ChatbotQuery,
+  Conversation,
 };

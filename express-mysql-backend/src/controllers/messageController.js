@@ -1,4 +1,4 @@
-const { Message, User, Item } = require('../models');
+const { Message, User, Item, Conversation } = require('../models');
 const { Op } = require('sequelize');
 
 exports.list = async (req, res, next) => {
@@ -7,6 +7,11 @@ exports.list = async (req, res, next) => {
       include: [
         { model: User, as: 'sender', attributes: ['user_id', 'username', 'email'] },
         { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email'] },
+        {
+          model: Conversation,
+          as: 'conversation',
+          attributes: ['conversation_id', 'context_type', 'status', 'item_id', 'charity_id'],
+        },
         { model: Item, as: 'item', attributes: ['item_id', 'title'] },
       ],
       order: [['created_at', 'DESC']],
@@ -24,6 +29,11 @@ exports.listBySender = async (req, res, next) => {
       include: [
         { model: User, as: 'sender', attributes: ['user_id', 'username', 'email'] },
         { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email'] },
+        {
+          model: Conversation,
+          as: 'conversation',
+          attributes: ['conversation_id', 'context_type', 'status', 'item_id', 'charity_id'],
+        },
         { model: Item, as: 'item', attributes: ['item_id', 'title'] },
       ],
       order: [['created_at', 'DESC']],
@@ -41,6 +51,11 @@ exports.listByReceiver = async (req, res, next) => {
       include: [
         { model: User, as: 'sender', attributes: ['user_id', 'username', 'email'] },
         { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email'] },
+        {
+          model: Conversation,
+          as: 'conversation',
+          attributes: ['conversation_id', 'context_type', 'status', 'item_id', 'charity_id'],
+        },
         { model: Item, as: 'item', attributes: ['item_id', 'title'] },
       ],
       order: [['created_at', 'DESC']],
@@ -63,6 +78,11 @@ exports.conversation = async (req, res, next) => {
       include: [
         { model: User, as: 'sender', attributes: ['user_id', 'username', 'email'] },
         { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email'] },
+        {
+          model: Conversation,
+          as: 'conversation',
+          attributes: ['conversation_id', 'context_type', 'status', 'item_id', 'charity_id'],
+        },
         { model: Item, as: 'item', attributes: ['item_id', 'title'] },
       ],
       order: [['created_at', 'ASC']],
@@ -79,6 +99,11 @@ exports.get = async (req, res, next) => {
       include: [
         { model: User, as: 'sender', attributes: ['user_id', 'username', 'email'] },
         { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email'] },
+        {
+          model: Conversation,
+          as: 'conversation',
+          attributes: ['conversation_id', 'context_type', 'status', 'item_id', 'charity_id'],
+        },
         { model: Item, as: 'item', attributes: ['item_id', 'title'] },
       ],
     });
@@ -96,6 +121,11 @@ exports.create = async (req, res, next) => {
       include: [
         { model: User, as: 'sender', attributes: ['user_id', 'username', 'email'] },
         { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email'] },
+        {
+          model: Conversation,
+          as: 'conversation',
+          attributes: ['conversation_id', 'context_type', 'status', 'item_id', 'charity_id', 'last_message_at'],
+        },
         { model: Item, as: 'item', attributes: ['item_id', 'title'] },
       ],
     });

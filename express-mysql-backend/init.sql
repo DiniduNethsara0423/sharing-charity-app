@@ -66,16 +66,35 @@ CREATE TABLE IF NOT EXISTS donation (
   FOREIGN KEY (item_id) REFERENCES item(item_id) ON DELETE SET NULL
 );
 
+CREATE TABLE IF NOT EXISTS conversation (
+  conversation_id INT PRIMARY KEY AUTO_INCREMENT,
+  participant_one_id INT NOT NULL,
+  participant_two_id INT,
+  charity_id INT,
+  item_id INT,
+  context_type VARCHAR(50) NOT NULL DEFAULT 'sale',
+  status VARCHAR(50) NOT NULL DEFAULT 'active',
+  last_message_at TIMESTAMP NULL DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (participant_one_id) REFERENCES `user`(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (participant_two_id) REFERENCES `user`(user_id) ON DELETE SET NULL,
+  FOREIGN KEY (charity_id) REFERENCES charity(charity_id) ON DELETE SET NULL,
+  FOREIGN KEY (item_id) REFERENCES item(item_id) ON DELETE SET NULL
+);
+
 CREATE TABLE IF NOT EXISTS message (
   message_id INT PRIMARY KEY AUTO_INCREMENT,
   sender_id INT NOT NULL,
   receiver_id INT NOT NULL,
+  conversation_id INT,
   item_id INT,
   content TEXT NOT NULL,
   encrypted BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (sender_id) REFERENCES `user`(user_id) ON DELETE CASCADE,
   FOREIGN KEY (receiver_id) REFERENCES `user`(user_id) ON DELETE CASCADE,
+  FOREIGN KEY (conversation_id) REFERENCES conversation(conversation_id) ON DELETE SET NULL,
   FOREIGN KEY (item_id) REFERENCES item(item_id) ON DELETE SET NULL
 );
 
