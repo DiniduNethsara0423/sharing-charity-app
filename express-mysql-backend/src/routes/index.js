@@ -9,7 +9,7 @@ const messageController = require('../controllers/messageController');
 const charityController = require('../controllers/charityController');
 const authRoutes = require('./auth');
 const categoriesRoutes = require('./categories');
-const { single } = require('../services/uploadService');
+// note: `single` already imported above
 
 const router = express.Router();
 

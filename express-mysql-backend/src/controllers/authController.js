@@ -156,3 +156,34 @@ exports.logout = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.googleAuth = async (req, res, next) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) return res.status(400).json({ success: false, code: 400, message: 'idToken is required', data: null });
+    const { verifyIdToken } = require('../services/googleAuthService');
+    const payload = await verifyIdToken(idToken);
+    if (!payload || !payload.email) return res.status(400).json({ success: false, code: 400, message: 'Invalid Google token', data: null });
+
+    // Check if user exists
+    let user = await User.findOne({ where: { email: payload.email } });
+
+    if (!user) {
+      // create user
+      user = await User.create({
+        username: payload.name ? payload.name.replace(/\s+/g, '').toLowerCase() : payload.email.split('@')[0],
+        email: payload.email,
+        password_hash: '',
+        image: payload.picture || null,
+      });
+    }
+
+    const token = generateToken(user.user_id);
+    const response = user.toJSON();
+    delete response.password_hash;
+    res.status(200).json({ success: true, code: 200, message: 'Sign in with Google successful', data: { token, user: response } });
+  } catch (err) {
+    if (err.message && err.message.includes('configured')) return res.status(500).json({ success: false, code: 500, message: 'Google OAuth not configured on server', data: null });
+    next(err);
+  }
+};
