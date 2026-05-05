@@ -2,9 +2,19 @@ const { Donation, User, Charity, Item } = require('../models');
 
 exports.list = async (req, res, next) => {
   try {
+    const { q } = req.query;
+    const { Op } = require('sequelize');
     const donations = await Donation.findAll({
+      where: q
+        ? {
+            [Op.or]: [
+              { gift_location: { [Op.like]: `%${q}%` } },
+              { impact: { [Op.like]: `%${q}%` } },
+            ],
+          }
+        : undefined,
       include: [
-        { model: User, as: 'donor', attributes: ['user_id', 'username', 'email'] },
+        { model: User, as: 'donor', attributes: ['user_id', 'username', 'email', 'device_token'] },
         { model: Charity, as: 'charity', attributes: ['charity_id', 'name'] },
         { model: Item, as: 'item', attributes: ['item_id', 'title'] },
       ],
@@ -71,11 +81,19 @@ exports.create = async (req, res, next) => {
     const donation = await Donation.create(req.body);
     const result = await Donation.findByPk(donation.donation_id, {
       include: [
-        { model: User, as: 'donor', attributes: ['user_id', 'username', 'email'] },
+        { model: User, as: 'donor', attributes: ['user_id', 'username', 'email', 'device_token'] },
         { model: Charity, as: 'charity', attributes: ['charity_id', 'name'] },
         { model: Item, as: 'item', attributes: ['item_id', 'title'] },
       ],
     });
+    try {
+      const { sendToUser } = require('../services/fcmService');
+      if (result && result.donor) {
+        await sendToUser(result.donor, { title: 'Donation Received', body: `Thank you for donating "${result.item ? result.item.title : 'an item'}".` }, { donation_id: String(result.donation_id) });
+      }
+    } catch (e) {
+      console.error('Notification error:', e);
+    }
     res.status(201).json({ success: true, code: 201, message: 'Created', data: result });
   } catch (err) {
     next(err);

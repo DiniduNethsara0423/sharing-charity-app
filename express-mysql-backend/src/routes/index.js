@@ -1,5 +1,6 @@
 const express = require('express');
 const userController = require('../controllers/userController');
+const { single } = require('../services/uploadService');
 const itemController = require('../controllers/itemController');
 const transactionController = require('../controllers/transactionController');
 const donationController = require('../controllers/donationController');
@@ -19,8 +20,8 @@ router.use('/auth', authRoutes);
 
 router.get('/users', userController.list);
 router.get('/users/:id', userController.get);
-router.post('/users', userController.create);
-router.put('/users/:id', userController.update);
+router.post('/users', single('image', 'users'), userController.create);
+router.put('/users/:id', single('image', 'users'), userController.update);
 router.delete('/users/:id', userController.remove);
 
 router.get('/items', itemController.list);

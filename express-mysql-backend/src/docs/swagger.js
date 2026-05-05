@@ -240,7 +240,7 @@ module.exports = {
       get: { tags: ['Transactions'], summary: 'List transactions by seller', parameters: [{ name: 'sellerId', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Transactions for seller' } } },
     },
     '/donations': {
-      get: { tags: ['Donations'], summary: 'List donations', responses: { 200: { description: 'List of donations' } } },
+      get: { tags: ['Donations'], summary: 'List donations (search with q)', parameters: [{ name: 'q', in: 'query', schema: { type: 'string' }, description: 'Search text for donations (location, impact)' }], responses: { 200: { description: 'List of donations' } } },
       post: { tags: ['Donations'], summary: 'Create donation', responses: { 201: { description: 'Created donation' } } },
     },
     '/donations/{id}': {

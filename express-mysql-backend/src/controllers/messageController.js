@@ -119,8 +119,8 @@ exports.create = async (req, res, next) => {
     const message = await Message.create(req.body);
     const result = await Message.findByPk(message.message_id, {
       include: [
-        { model: User, as: 'sender', attributes: ['user_id', 'username', 'email'] },
-        { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email'] },
+        { model: User, as: 'sender', attributes: ['user_id', 'username', 'email', 'device_token'] },
+        { model: User, as: 'receiver', attributes: ['user_id', 'username', 'email', 'device_token'] },
         {
           model: Conversation,
           as: 'conversation',
@@ -129,6 +129,14 @@ exports.create = async (req, res, next) => {
         { model: Item, as: 'item', attributes: ['item_id', 'title'] },
       ],
     });
+    try {
+      const { sendToUser } = require('../services/fcmService');
+      if (result && result.receiver) {
+        await sendToUser(result.receiver, { title: 'New Message', body: `${result.sender.username}: ${result.content}` }, { message_id: String(result.message_id), conversation_id: String(result.conversation ? result.conversation.conversation_id : '') });
+      }
+    } catch (e) {
+      console.error('Notification error:', e);
+    }
     res.status(201).json({ success: true, code: 201, message: 'Created', data: result });
   } catch (err) {
     next(err);

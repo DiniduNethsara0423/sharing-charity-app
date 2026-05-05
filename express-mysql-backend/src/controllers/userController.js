@@ -25,7 +25,9 @@ exports.get = async (req, res, next) => {
 
 exports.create = async (req, res, next) => {
   try {
-    const user = await User.create(req.body);
+    const payload = { ...req.body };
+    if (req.file) payload.image = `/uploads/users/${req.file.filename}`;
+    const user = await User.create(payload);
     const response = user.toJSON();
     delete response.password_hash;
     res.status(201).json({ success: true, code: 201, message: 'Created', data: response });
@@ -39,7 +41,9 @@ exports.update = async (req, res, next) => {
     const user = await User.findByPk(req.params.id);
     if (!user) return res.status(404).json({ success: false, code: 404, message: 'User not found', data: null });
 
-    await user.update(req.body);
+    const payload = { ...req.body };
+    if (req.file) payload.image = `/uploads/users/${req.file.filename}`;
+    await user.update(payload);
     const response = user.toJSON();
     delete response.password_hash;
     res.status(200).json({ success: true, code: 200, message: 'OK', data: response });

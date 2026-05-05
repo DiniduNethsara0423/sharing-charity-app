@@ -34,6 +34,14 @@ const User = sequelize.define('User', {
   location: {
     type: DataTypes.STRING(255),
   },
+  image: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+  },
+  device_token: {
+    type: DataTypes.STRING(512),
+    allowNull: true,
+  },
 }, {
   tableName: 'user',
   timestamps: true,

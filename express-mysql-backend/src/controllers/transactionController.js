@@ -10,6 +10,14 @@ exports.list = async (req, res, next) => {
       ],
       order: [['created_at', 'DESC']],
     });
+    try {
+      const { sendToUser } = require('../services/fcmService');
+      if (result && result.seller) {
+        await sendToUser(result.seller, { title: 'Item Sold', body: `Your item \"${result.item.title}\" was purchased.` }, { item_id: String(result.item.item_id), transaction_id: String(result.transaction_id) });
+      }
+    } catch (e) {
+      console.error('Notification error:', e);
+    }
     res.status(200).json({ success: true, code: 200, message: 'OK', data: transactions });
   } catch (err) {
     next(err);

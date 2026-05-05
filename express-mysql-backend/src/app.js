@@ -28,6 +28,9 @@ app.use((req, res, next) => {
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(routes);
 
+// Serve uploaded files
+app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')));
+
 app.use((err, req, res, next) => {
   console.error(err);
   // Send unified error response

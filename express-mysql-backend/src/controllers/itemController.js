@@ -2,11 +2,18 @@ const { Item, User, Category, Transaction } = require('../models');
 
 exports.list = async (req, res, next) => {
   try {
-    const { categoryId, status } = req.query;
+    const { categoryId, status, q } = req.query;
     const where = {};
     if (categoryId) where.category_id = categoryId;
     if (status === 'sold') where.status = 'sold';
     if (status === 'unsold') where.status = 'active';
+    if (q) {
+      const { Op } = require('sequelize');
+      where[Op.or] = [
+        { title: { [Op.like]: `%${q}%` } },
+        { description: { [Op.like]: `%${q}%` } },
+      ];
+    }
 
     const items = await Item.findAll({
       where,
