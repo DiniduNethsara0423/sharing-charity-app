@@ -7,6 +7,8 @@ const Message = require('./Message');
 const Charity = require('./Charity');
 const ChatbotQuery = require('./ChatbotQuery');
 const Conversation = require('./Conversation');
+const Category = require('./Category');
+const Otp = require('./Otp');
 
 // Define Associations
 // User -> Item (one-to-many: user sells items)
@@ -160,6 +162,17 @@ Message.belongsTo(Item, {
   as: 'item',
 });
 
+// Category -> Item
+Category.hasMany(Item, {
+  foreignKey: 'category_id',
+  as: 'items',
+  onDelete: 'SET NULL',
+});
+Item.belongsTo(Category, {
+  foreignKey: 'category_id',
+  as: 'category',
+});
+
 Conversation.hasMany(Message, {
   foreignKey: 'conversation_id',
   as: 'messages',
@@ -191,4 +204,6 @@ module.exports = {
   Charity,
   ChatbotQuery,
   Conversation,
+  Category,
+  Otp,
 };

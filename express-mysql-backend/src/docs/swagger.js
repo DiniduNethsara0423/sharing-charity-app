@@ -15,6 +15,8 @@ module.exports = {
     { name: 'Health', description: 'Service health checks' },
     { name: 'Users', description: 'User management' },
     { name: 'Items', description: 'Item management' },
+    { name: 'Categories', description: 'Category management' },
+    { name: 'Auth', description: 'Authentication and OTP' },
     { name: 'Transactions', description: 'Transaction management' },
     { name: 'Donations', description: 'Donation management' },
     { name: 'Messages', description: 'Messaging between users' },
@@ -22,6 +24,13 @@ module.exports = {
     { name: 'Chatbot Queries', description: 'Chatbot query records' },
   ],
   components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+    },
     schemas: {
       User: {
         type: 'object',
@@ -41,9 +50,27 @@ module.exports = {
           seller_id: { type: 'integer', example: 1 },
           title: { type: 'string', example: 'Used Laptop' },
           description: { type: 'string', example: 'Dell XPS in great condition' },
-          category: { type: 'string', example: 'Electronics' },
+          category_id: { type: 'integer', example: 2 },
+          image: { type: 'string', example: '/uploads/items/1612345.jpg' },
           price: { type: 'number', example: 500.0 },
           status: { type: 'string', example: 'active' },
+        },
+      },
+      Category: {
+        type: 'object',
+        properties: {
+          category_id: { type: 'integer', example: 1 },
+          category_name: { type: 'string', example: 'Electronics' },
+          image: { type: 'string', example: '/uploads/categories/1612345.jpg' },
+        },
+      },
+      ResponseEnvelope: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean' },
+          code: { type: 'integer' },
+          message: { type: 'string' },
+          data: { type: ['object', 'array', 'null'] },
         },
       },
       Transaction: {
@@ -128,20 +155,72 @@ module.exports = {
       get: { tags: ['Users'], summary: 'List users', responses: { 200: { description: 'List of users' } } },
       post: { tags: ['Users'], summary: 'Create user', responses: { 201: { description: 'Created user' } } },
     },
+    '/auth/signup': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Sign up new user',
+        requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/User' } } } },
+        responses: { 201: { description: 'Created', content: { 'application/json': { schema: { $ref: '#/components/schemas/ResponseEnvelope' } } } } },
+      },
+    },
+    '/auth/signin': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Sign in user',
+        requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { email: { type: 'string' }, password: { type: 'string' } } } } } },
+        responses: { 200: { description: 'Signed in', content: { 'application/json': { schema: { $ref: '#/components/schemas/ResponseEnvelope' } } } } },
+      },
+    },
+    '/auth/forgot-password': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Request OTP for password reset',
+        requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { email: { type: 'string' } } } } } },
+        responses: { 200: { description: 'OTP sent', content: { 'application/json': { schema: { $ref: '#/components/schemas/ResponseEnvelope' } } } } },
+      },
+    },
+    '/auth/verify-otp': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Verify OTP and receive reset token',
+        requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { email: { type: 'string' }, code: { type: 'string' } } } } } },
+        responses: { 200: { description: 'OTP verified', content: { 'application/json': { schema: { $ref: '#/components/schemas/ResponseEnvelope' } } } } },
+      },
+    },
+    '/auth/logout': {
+      post: {
+        tags: ['Auth'],
+        summary: 'Logout and revoke token',
+        security: [{ bearerAuth: [] }],
+        responses: { 200: { description: 'Logged out', content: { 'application/json': { schema: { $ref: '#/components/schemas/ResponseEnvelope' } } } } },
+      },
+    },
     '/users/{id}': {
       get: { tags: ['Users'], summary: 'Get user by ID', parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'User' }, 404: { description: 'Not found' } } },
       put: { tags: ['Users'], summary: 'Update user', parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Updated user' }, 404: { description: 'Not found' } } },
       delete: { tags: ['Users'], summary: 'Delete user', parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 204: { description: 'Deleted' }, 404: { description: 'Not found' } } },
     },
     '/items': {
-      get: { tags: ['Items'], summary: 'List items', responses: { 200: { description: 'List of items' } } },
-      post: { tags: ['Items'], summary: 'Create item', responses: { 201: { description: 'Created item' } } },
+      get: { tags: ['Items'], summary: 'List items (filter by categoryId,status)', parameters: [{ name: 'categoryId', in: 'query', schema: { type: 'integer' } }, { name: 'status', in: 'query', schema: { type: 'string', enum: ['sold','unsold'] } }], responses: { 200: { description: 'List of items', content: { 'application/json': { schema: { $ref: '#/components/schemas/ResponseEnvelope' } } } } } },
+      post: { tags: ['Items'], summary: 'Create item (multipart)', requestBody: { content: { 'multipart/form-data': { schema: { type: 'object', properties: { seller_id: { type: 'integer' }, title: { type: 'string' }, description: { type: 'string' }, category_id: { type: 'integer' }, price: { type: 'number' }, status: { type: 'string' }, image: { type: 'string', format: 'binary' } } } } }, required: true }, responses: { 201: { description: 'Created item', content: { 'application/json': { schema: { $ref: '#/components/schemas/ResponseEnvelope' } } } } } },
+    },
+    '/items/stats': {
+      get: { tags: ['Items'], summary: 'Get item statistics (total sold, income, buy count)', responses: { 200: { description: 'Stats', content: { 'application/json': { schema: { $ref: '#/components/schemas/ResponseEnvelope' } } } } } },
     },
     '/items/{id}': {
       get: { tags: ['Items'], summary: 'Get item by ID', parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Item' }, 404: { description: 'Not found' } } },
-      put: { tags: ['Items'], summary: 'Update item', parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Updated item' }, 404: { description: 'Not found' } } },
-      delete: { tags: ['Items'], summary: 'Delete item', parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 204: { description: 'Deleted' }, 404: { description: 'Not found' } } },
+      put: { tags: ['Items'], summary: 'Update item (multipart)', parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'multipart/form-data': { schema: { type: 'object', properties: { title: { type: 'string' }, description: { type: 'string' }, category_id: { type: 'integer' }, price: { type: 'number' }, status: { type: 'string' }, image: { type: 'string', format: 'binary' } } } } } }, responses: { 200: { description: 'Updated item' }, 404: { description: 'Not found' } } },
+      delete: { tags: ['Items'], summary: 'Delete item', parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } } },
     },
+        '/categories': {
+          get: { tags: ['Categories'], summary: 'List categories', responses: { 200: { description: 'List of categories', content: { 'application/json': { schema: { $ref: '#/components/schemas/ResponseEnvelope' } } } } } },
+          post: { tags: ['Categories'], summary: 'Create category (multipart)', requestBody: { required: true, content: { 'multipart/form-data': { schema: { type: 'object', properties: { category_name: { type: 'string' }, image: { type: 'string', format: 'binary' } } } } } }, responses: { 201: { description: 'Created category', content: { 'application/json': { schema: { $ref: '#/components/schemas/ResponseEnvelope' } } } } } },
+        },
+        '/categories/{id}': {
+          get: { tags: ['Categories'], summary: 'Get category by ID', parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Category' }, 404: { description: 'Not found' } } },
+          put: { tags: ['Categories'], summary: 'Update category (multipart)', parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], requestBody: { content: { 'multipart/form-data': { schema: { type: 'object', properties: { category_name: { type: 'string' }, image: { type: 'string', format: 'binary' } } } } } }, responses: { 200: { description: 'Updated category' }, 404: { description: 'Not found' } } },
+          delete: { tags: ['Categories'], summary: 'Delete category', parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } } },
+        },
     '/items/seller/{sellerId}': {
       get: { tags: ['Items'], summary: 'List items by seller', parameters: [{ name: 'sellerId', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'List of items for seller' } } },
     },

@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { isBlacklisted } = require('../services/tokenBlacklist');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
@@ -15,10 +16,15 @@ const verifyToken = (req, res, next) => {
     return res.status(401).json({ error: 'Invalid token format' });
   }
 
+  if (isBlacklisted(token)) {
+    return res.status(401).json({ error: 'Token has been revoked' });
+  }
+
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.userId = decoded.userId;
     req.user = decoded;
+    req.token = token;
     next();
   } catch (err) {
     return res.status(403).json({ error: 'Token is invalid or expired' });

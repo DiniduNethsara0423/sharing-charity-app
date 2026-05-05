@@ -16,7 +16,7 @@ exports.list = async (req, res, next) => {
       ],
       order: [['created_at', 'DESC']],
     });
-    res.json(messages);
+    res.status(200).json({ success: true, code: 200, message: 'OK', data: messages });
   } catch (err) {
     next(err);
   }
@@ -38,7 +38,7 @@ exports.listBySender = async (req, res, next) => {
       ],
       order: [['created_at', 'DESC']],
     });
-    res.json(messages);
+    res.status(200).json({ success: true, code: 200, message: 'OK', data: messages });
   } catch (err) {
     next(err);
   }
@@ -60,7 +60,7 @@ exports.listByReceiver = async (req, res, next) => {
       ],
       order: [['created_at', 'DESC']],
     });
-    res.json(messages);
+    res.status(200).json({ success: true, code: 200, message: 'OK', data: messages });
   } catch (err) {
     next(err);
   }
@@ -87,7 +87,7 @@ exports.conversation = async (req, res, next) => {
       ],
       order: [['created_at', 'ASC']],
     });
-    res.json(messages);
+    res.status(200).json({ success: true, code: 200, message: 'OK', data: messages });
   } catch (err) {
     next(err);
   }
@@ -107,8 +107,8 @@ exports.get = async (req, res, next) => {
         { model: Item, as: 'item', attributes: ['item_id', 'title'] },
       ],
     });
-    if (!message) return res.status(404).json({ error: 'Message not found' });
-    res.json(message);
+    if (!message) return res.status(404).json({ success: false, code: 404, message: 'Message not found', data: null });
+    res.status(200).json({ success: true, code: 200, message: 'OK', data: message });
   } catch (err) {
     next(err);
   }
@@ -129,7 +129,7 @@ exports.create = async (req, res, next) => {
         { model: Item, as: 'item', attributes: ['item_id', 'title'] },
       ],
     });
-    res.status(201).json(result);
+    res.status(201).json({ success: true, code: 201, message: 'Created', data: result });
   } catch (err) {
     next(err);
   }
@@ -138,7 +138,7 @@ exports.create = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
     const message = await Message.findByPk(req.params.id);
-    if (!message) return res.status(404).json({ error: 'Message not found' });
+    if (!message) return res.status(404).json({ success: false, code: 404, message: 'Message not found', data: null });
     await message.update(req.body);
     const result = await Message.findByPk(req.params.id, {
       include: [
@@ -147,7 +147,7 @@ exports.update = async (req, res, next) => {
         { model: Item, as: 'item', attributes: ['item_id', 'title'] },
       ],
     });
-    res.json(result);
+    res.status(200).json({ success: true, code: 200, message: 'OK', data: result });
   } catch (err) {
     next(err);
   }
@@ -156,9 +156,9 @@ exports.update = async (req, res, next) => {
 exports.remove = async (req, res, next) => {
   try {
     const message = await Message.findByPk(req.params.id);
-    if (!message) return res.status(404).json({ error: 'Message not found' });
+    if (!message) return res.status(404).json({ success: false, code: 404, message: 'Message not found', data: null });
     await message.destroy();
-    res.status(204).end();
+    res.status(200).json({ success: true, code: 200, message: 'Deleted', data: null });
   } catch (err) {
     next(err);
   }

@@ -7,10 +7,12 @@ const chatbotController = require('../controllers/chatbotController');
 const messageController = require('../controllers/messageController');
 const charityController = require('../controllers/charityController');
 const authRoutes = require('./auth');
+const categoriesRoutes = require('./categories');
+const { single } = require('../services/uploadService');
 
 const router = express.Router();
 
-router.get('/', (req, res) => res.json({ ok: true }));
+router.get('/', (req, res) => res.status(200).json({ success: true, code: 200, message: 'OK', data: { ok: true } }));
 
 // Auth routes
 router.use('/auth', authRoutes);
@@ -23,9 +25,10 @@ router.delete('/users/:id', userController.remove);
 
 router.get('/items', itemController.list);
 router.get('/items/seller/:sellerId', itemController.listBySeller);
+router.get('/items/stats', itemController.stats);
 router.get('/items/:id', itemController.get);
-router.post('/items', itemController.create);
-router.put('/items/:id', itemController.update);
+router.post('/items', single('image', 'items'), itemController.create);
+router.put('/items/:id', single('image', 'items'), itemController.update);
 router.delete('/items/:id', itemController.remove);
 
 router.get('/transactions', transactionController.list);
@@ -65,5 +68,8 @@ router.get('/charities/:id', charityController.get);
 router.post('/charities', charityController.create);
 router.put('/charities/:id', charityController.update);
 router.delete('/charities/:id', charityController.remove);
+
+// Categories
+router.use('/categories', categoriesRoutes);
 
 module.exports = router;

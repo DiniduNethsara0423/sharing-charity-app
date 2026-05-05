@@ -25,8 +25,17 @@ const Item = sequelize.define('Item', {
   description: {
     type: DataTypes.TEXT,
   },
-  category: {
-    type: DataTypes.STRING(100),
+  category_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'category',
+      key: 'category_id',
+    },
+  },
+  image: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
   },
   price: {
     type: DataTypes.DECIMAL(10, 2),
