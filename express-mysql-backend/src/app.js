@@ -5,10 +5,13 @@ const swaggerDocument = require('./docs/swagger');
 const routes = require('./routes');
 const { sequelize } = require('./models');
 const responseFormatter = require('./middleware/responseFormatter');
+const requestLogger = require('./middleware/requestLogger');
 
 const app = express();
 
 app.use(express.json());
+// requestLogger logs request/response details to logs/requests.log and console
+app.use(requestLogger);
 app.use(morgan('dev'));
 // Standardize JSON responses for all routes
 app.use(responseFormatter);

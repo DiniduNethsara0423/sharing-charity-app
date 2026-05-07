@@ -14,6 +14,14 @@ const server = http.createServer(app);
     await sequelize.sync();
     console.log('✓ Database synchronized');
 
+    // Seed default categories if they don't exist
+    try {
+      const { seedCategories } = require('./services/seedCategories');
+      await seedCategories();
+    } catch (err) {
+      console.error('Category seeding failed:', err);
+    }
+
     initializeSocket(server);
 
     server.listen(PORT, () => {
