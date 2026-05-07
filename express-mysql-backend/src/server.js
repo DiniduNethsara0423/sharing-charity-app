@@ -11,8 +11,9 @@ const server = http.createServer(app);
 
 (async () => {
   try {
-    await sequelize.sync();
-    console.log('✓ Database synchronized');
+    // Sync models to DB; use `alter` to update existing tables with missing columns
+    await sequelize.sync({ alter: true });
+    console.log('✓ Database synchronized (schema altered if needed)');
 
     // Seed default categories if they don't exist
     try {

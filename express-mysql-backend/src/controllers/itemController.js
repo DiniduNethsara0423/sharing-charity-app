@@ -66,6 +66,22 @@ exports.create = async (req, res, next) => {
   try {
     const payload = { ...req.body };
     if (req.file) payload.image = `/uploads/items/${req.file.filename}`;
+
+    // Normalize status value to match model allowed values
+    if (payload.status && typeof payload.status === 'string') {
+      let s = payload.status.trim().toLowerCase();
+      // Remove surrounding quotes if present
+      if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith('"') && s.endsWith('"'))) {
+        s = s.slice(1, -1).trim();
+      }
+      if (s === 'unsold' || s === 'available' || s === 'ok') s = 'active';
+      if (!['active', 'inactive', 'sold'].includes(s)) {
+        delete payload.status; // let default apply
+      } else {
+        payload.status = s;
+      }
+    }
+
     const item = await Item.create(payload);
     const result = await Item.findByPk(item.item_id, {
       include: [{
@@ -86,6 +102,20 @@ exports.update = async (req, res, next) => {
     if (!item) return res.status(404).json({ success: false, code: 404, message: 'Item not found', data: null });
     const payload = { ...req.body };
     if (req.file) payload.image = `/uploads/items/${req.file.filename}`;
+    // Normalize status like in create
+    if (payload.status && typeof payload.status === 'string') {
+      let s = payload.status.trim().toLowerCase();
+      if ((s.startsWith("'") && s.endsWith("'")) || (s.startsWith('"') && s.endsWith('"'))) {
+        s = s.slice(1, -1).trim();
+      }
+      if (s === 'unsold' || s === 'available' || s === 'ok') s = 'active';
+      if (!['active', 'inactive', 'sold'].includes(s)) {
+        delete payload.status;
+      } else {
+        payload.status = s;
+      }
+    }
+
     await item.update(payload);
     const result = await Item.findByPk(req.params.id, {
       include: [
