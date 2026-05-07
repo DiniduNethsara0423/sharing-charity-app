@@ -5,7 +5,9 @@ exports.list = async (req, res, next) => {
     const users = await User.findAll({
       attributes: { exclude: ['password_hash'] },
     });
-    res.status(200).json({ success: true, code: 200, message: 'OK', data: users });
+    const rows = users.map(u => u.toJSON());
+    // Keep image field as stored (data URL or existing path). Frontend can use data URL directly.
+    res.status(200).json({ success: true, code: 200, message: 'OK', data: rows });
   } catch (err) {
     next(err);
   }
@@ -17,7 +19,9 @@ exports.get = async (req, res, next) => {
       attributes: { exclude: ['password_hash'] },
     });
     if (!user) return res.status(404).json({ success: false, code: 404, message: 'User not found', data: null });
-    res.status(200).json({ success: true, code: 200, message: 'OK', data: user });
+    const response = user.toJSON();
+    // Return stored image value (data URL or path) directly without saving files.
+    res.status(200).json({ success: true, code: 200, message: 'OK', data: response });
   } catch (err) {
     next(err);
   }
@@ -26,7 +30,10 @@ exports.get = async (req, res, next) => {
 exports.create = async (req, res, next) => {
   try {
     const payload = { ...req.body };
-    if (req.file) payload.image = `/uploads/users/${req.file.filename}`;
+    if (req.file && req.file.buffer) {
+      const b64 = req.file.buffer.toString('base64');
+      payload.image = `data:${req.file.mimetype};base64,${b64}`;
+    }
     const user = await User.create(payload);
     const response = user.toJSON();
     delete response.password_hash;
@@ -42,7 +49,10 @@ exports.update = async (req, res, next) => {
     if (!user) return res.status(404).json({ success: false, code: 404, message: 'User not found', data: null });
 
     const payload = { ...req.body };
-    if (req.file) payload.image = `/uploads/users/${req.file.filename}`;
+    if (req.file && req.file.buffer) {
+      const b64 = req.file.buffer.toString('base64');
+      payload.image = `data:${req.file.mimetype};base64,${b64}`;
+    }
     await user.update(payload);
     const response = user.toJSON();
     delete response.password_hash;

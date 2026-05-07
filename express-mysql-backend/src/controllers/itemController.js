@@ -23,7 +23,9 @@ exports.list = async (req, res, next) => {
       ],
       order: [['created_at', 'DESC']],
     });
-    res.status(200).json({ success: true, code: 200, message: 'OK', data: items });
+    const rows = items.map(i => i.toJSON());
+    // Keep image fields as stored (data URLs or paths). Frontend can use data URLs directly.
+    res.status(200).json({ success: true, code: 200, message: 'OK', data: rows });
   } catch (err) {
     next(err);
   }
@@ -53,10 +55,12 @@ exports.get = async (req, res, next) => {
         model: User,
         as: 'seller',
         attributes: ['user_id', 'username', 'email'],
-      }],
+      }, { model: Category, as: 'category' }],
     });
     if (!item) return res.status(404).json({ success: false, code: 404, message: 'Item not found', data: null });
-    res.status(200).json({ success: true, code: 200, message: 'OK', data: item });
+    const response = item.toJSON();
+    // Return image fields as stored (data URL or path) without writing files.
+    res.status(200).json({ success: true, code: 200, message: 'OK', data: response });
   } catch (err) {
     next(err);
   }
@@ -65,7 +69,10 @@ exports.get = async (req, res, next) => {
 exports.create = async (req, res, next) => {
   try {
     const payload = { ...req.body };
-    if (req.file) payload.image = `/uploads/items/${req.file.filename}`;
+    if (req.file && req.file.buffer) {
+      const b64 = req.file.buffer.toString('base64');
+      payload.image = `data:${req.file.mimetype};base64,${b64}`;
+    }
 
     // Normalize status value to match model allowed values
     if (payload.status && typeof payload.status === 'string') {
@@ -101,7 +108,10 @@ exports.update = async (req, res, next) => {
     const item = await Item.findByPk(req.params.id);
     if (!item) return res.status(404).json({ success: false, code: 404, message: 'Item not found', data: null });
     const payload = { ...req.body };
-    if (req.file) payload.image = `/uploads/items/${req.file.filename}`;
+    if (req.file && req.file.buffer) {
+      const b64 = req.file.buffer.toString('base64');
+      payload.image = `data:${req.file.mimetype};base64,${b64}`;
+    }
     // Normalize status like in create
     if (payload.status && typeof payload.status === 'string') {
       let s = payload.status.trim().toLowerCase();

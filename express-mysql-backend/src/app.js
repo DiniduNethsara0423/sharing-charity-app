@@ -6,6 +6,7 @@ const routes = require('./routes');
 const { sequelize } = require('./models');
 const responseFormatter = require('./middleware/responseFormatter');
 const requestLogger = require('./middleware/requestLogger');
+const path = require('path');
 
 const app = express();
 
@@ -31,8 +32,14 @@ app.use((req, res, next) => {
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use(routes);
 
-// Serve uploaded files
-app.use('/uploads', express.static(require('path').join(__dirname, 'uploads')));
+// Serve uploaded files (existing uploads folder)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Serve generated/external images from configurable folder at /images
+const IMAGE_STORAGE_PATH = process.env.IMAGE_STORAGE_PATH || path.resolve(__dirname, '..', 'external_uploads');
+ensureDir = (dir) => { if (!require('fs').existsSync(dir)) require('fs').mkdirSync(dir, { recursive: true }); };
+ensureDir(IMAGE_STORAGE_PATH);
+app.use('/images', express.static(IMAGE_STORAGE_PATH));
 
 app.use((err, req, res, next) => {
   console.error(err);

@@ -19,4 +19,8 @@ const storage = (subfolder = '') => multer.diskStorage({
 
 const single = (field = 'image', subfolder = '') => multer({ storage: storage(subfolder) }).single(field);
 
-module.exports = { single };
+// Memory-storage variant: keeps file buffer in `req.file.buffer` so callers
+// can convert to base64 and store in DB instead of writing to disk.
+const singleMemory = (field = 'image') => multer({ storage: multer.memoryStorage() }).single(field);
+
+module.exports = { single, singleMemory };

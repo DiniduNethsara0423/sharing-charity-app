@@ -35,7 +35,7 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING(255),
   },
   image: {
-    type: DataTypes.STRING(255),
+    type: DataTypes.TEXT('long'),
     allowNull: true,
   },
   device_token: {

@@ -34,7 +34,7 @@ const Item = sequelize.define('Item', {
     },
   },
   image: {
-    type: DataTypes.STRING(255),
+    type: DataTypes.TEXT('long'),
     allowNull: true,
   },
   price: {

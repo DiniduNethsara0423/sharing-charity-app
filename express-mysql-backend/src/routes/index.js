@@ -1,6 +1,6 @@
 const express = require('express');
 const userController = require('../controllers/userController');
-const { single } = require('../services/uploadService');
+const { single, singleMemory } = require('../services/uploadService');
 const itemController = require('../controllers/itemController');
 const transactionController = require('../controllers/transactionController');
 const donationController = require('../controllers/donationController');
@@ -20,16 +20,16 @@ router.use('/auth', authRoutes);
 
 router.get('/users', userController.list);
 router.get('/users/:id', userController.get);
-router.post('/users', single('image', 'users'), userController.create);
-router.put('/users/:id', single('image', 'users'), userController.update);
+router.post('/users', singleMemory('image'), userController.create);
+router.put('/users/:id', singleMemory('image'), userController.update);
 router.delete('/users/:id', userController.remove);
 
 router.get('/items', itemController.list);
 router.get('/items/seller/:sellerId', itemController.listBySeller);
 router.get('/items/stats', itemController.stats);
 router.get('/items/:id', itemController.get);
-router.post('/items', single('image', 'items'), itemController.create);
-router.put('/items/:id', single('image', 'items'), itemController.update);
+router.post('/items', singleMemory('image'), itemController.create);
+router.put('/items/:id', singleMemory('image'), itemController.update);
 router.delete('/items/:id', itemController.remove);
 
 router.get('/transactions', transactionController.list);
@@ -72,5 +72,11 @@ router.delete('/charities/:id', charityController.remove);
 
 // Categories
 router.use('/categories', categoriesRoutes);
+
+// Non-persistent image streaming endpoints (decode base64 and send bytes)
+const imageController = require('../controllers/imageController');
+router.get('/media/user/:id', imageController.userImage);
+router.get('/media/category/:id', imageController.categoryImage);
+router.get('/media/item/:id', imageController.itemImage);
 
 module.exports = router;
