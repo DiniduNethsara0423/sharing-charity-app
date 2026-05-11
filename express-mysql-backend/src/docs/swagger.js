@@ -22,6 +22,7 @@ module.exports = {
     { name: 'Messages', description: 'Messaging between users' },
     { name: 'Charities', description: 'Charity management' },
     { name: 'Chatbot Queries', description: 'Chatbot query records' },
+    { name: 'Chatbot', description: 'Donation assistant and chatbot endpoints' },
   ],
   components: {
     securitySchemes: {
@@ -292,6 +293,21 @@ module.exports = {
     },
     '/chatbot-queries/user/{userId}': {
       get: { tags: ['Chatbot Queries'], summary: 'List chatbot queries by user', parameters: [{ name: 'userId', in: 'path', required: true, schema: { type: 'integer' } }], responses: { 200: { description: 'Queries for user' } } },
+    },
+    '/chatbot/donation': {
+      post: {
+        tags: ['Chatbot'],
+        summary: 'Get donation guidance from chatbot',
+        requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { message: { type: 'string' } } } } } },
+        responses: { 200: { description: 'Chatbot reply', content: { 'application/json': { schema: { $ref: '#/components/schemas/ResponseEnvelope' } } } } },
+      },
+    },
+    '/chatbot/status': {
+      get: {
+        tags: ['Chatbot'],
+        summary: 'Chatbot status and available endpoints',
+        responses: { 200: { description: 'Status', content: { 'application/json': { schema: { $ref: '#/components/schemas/ResponseEnvelope' } } } } },
+      },
     },
   },
 };

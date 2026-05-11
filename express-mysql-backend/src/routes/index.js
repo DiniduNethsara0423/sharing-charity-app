@@ -9,6 +9,7 @@ const messageController = require('../controllers/messageController');
 const charityController = require('../controllers/charityController');
 const authRoutes = require('./auth');
 const categoriesRoutes = require('./categories');
+const chatbotRoutes = require('./chatbot.routes');
 // note: `single` already imported above
 
 const router = express.Router();
@@ -72,6 +73,8 @@ router.delete('/charities/:id', charityController.remove);
 
 // Categories
 router.use('/categories', categoriesRoutes);
+// Chatbot donation rules
+router.use('/chatbot', chatbotRoutes);
 
 // Non-persistent image streaming endpoints (decode base64 and send bytes)
 const imageController = require('../controllers/imageController');
