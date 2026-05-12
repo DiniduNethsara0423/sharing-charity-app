@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+.env
+.git
+.github
+.vscode
+logs/
+external_uploads/
+uploads/
+test-image.txt
+*.local
+*.log
+coverage/
+dist/
+build/

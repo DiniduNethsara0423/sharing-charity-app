@@ -7,6 +7,8 @@ const donationController = require('../controllers/donationController');
 const chatbotController = require('../controllers/chatbotController');
 const messageController = require('../controllers/messageController');
 const charityController = require('../controllers/charityController');
+const paymentController = require('../controllers/paymentController');
+const payhereController = require('../controllers/payhereController');
 const authRoutes = require('./auth');
 const categoriesRoutes = require('./categories');
 const chatbotRoutes = require('./chatbot.routes');
@@ -70,6 +72,12 @@ router.get('/charities/:id', charityController.get);
 router.post('/charities', charityController.create);
 router.put('/charities/:id', charityController.update);
 router.delete('/charities/:id', charityController.remove);
+
+// Payments (Stripe)
+router.post('/payments/create', paymentController.createPayment);
+router.post('/payments/webhook', express.raw({ type: 'application/json' }), paymentController.webhook);
+router.post('/payments/payhere/create', payhereController.createPayment);
+router.post('/payments/payhere/notify', express.urlencoded({ extended: true }), payhereController.notify);
 
 // Categories
 router.use('/categories', categoriesRoutes);
