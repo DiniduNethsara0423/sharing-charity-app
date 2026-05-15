@@ -7,6 +7,7 @@ const donationController = require('../controllers/donationController');
 const chatbotController = require('../controllers/chatbotController');
 const messageController = require('../controllers/messageController');
 const charityController = require('../controllers/charityController');
+const adminController = require('../controllers/adminController');
 const paymentController = require('../controllers/paymentController');
 const payhereController = require('../controllers/payhereController');
 const authRoutes = require('./auth');
@@ -72,6 +73,9 @@ router.get('/charities/:id', charityController.get);
 router.post('/charities', charityController.create);
 router.put('/charities/:id', charityController.update);
 router.delete('/charities/:id', charityController.remove);
+
+// Admin dashboard stats (counts)
+router.get('/admin/stats', adminController.stats);
 
 // Payments (Stripe)
 router.post('/payments/create', paymentController.createPayment);
