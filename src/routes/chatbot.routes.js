@@ -76,7 +76,7 @@ function getDonationReply(message) {
 
 async function insertChat({ userId, message, reply, intent }) {
   const [result] = await db.query(
-    'INSERT INTO chatbot_query (user_id, `query`, `response`, `intent`) VALUES (?, ?, ?, ?)',
+    'INSERT INTO chatbot_query (user_id, `query`, `response`, `intent`, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())',
     [userId, message, reply, intent]
   );
 

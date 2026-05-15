@@ -23,7 +23,7 @@ exports.create = async (req, res, next) => {
   try {
     const { user_id, query, response, intent } = req.body;
     const [result] = await db.query(
-      'INSERT INTO chatbot_query (user_id, query, response, intent) VALUES (?, ?, ?, ?)',
+      'INSERT INTO chatbot_query (user_id, query, response, intent, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())',
       [user_id, query, response, intent]
     );
     const [rows] = await db.query('SELECT * FROM chatbot_query WHERE query_id = ?', [result.insertId]);
