@@ -29,14 +29,23 @@ const defaultCategories = [
   'Sports',
 ];
 
+const clothingSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+
 async function seedCategories() {
   try {
     for (const name of defaultCategories) {
       const image = svgDataUrl(name);
-      await Category.findOrCreate({
+      const [category] = await Category.findOrCreate({
         where: { category_name: name },
-        defaults: { category_name: name, image },
+        defaults: {
+          category_name: name,
+          image,
+          sizes: name === 'Clothing' ? JSON.stringify(clothingSizes) : null,
+        },
       });
+      if (name === 'Clothing' && !category.sizes) {
+        await category.update({ sizes: JSON.stringify(clothingSizes) });
+      }
     }
     console.log('✓ Default categories seeded (if missing)');
   } catch (err) {
