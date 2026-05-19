@@ -5,7 +5,8 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "migrate:chatbot-query": "node migrations/20260515_add_chatbot_query_created_at_default.js"
   },
   "keywords": [],
   "author": "",
