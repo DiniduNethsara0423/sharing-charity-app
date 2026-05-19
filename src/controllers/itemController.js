@@ -1,5 +1,95 @@
 const { Item, User, Category, Transaction } = require('../models');
 
+const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+
+function parseSizes(input) {
+  if (Array.isArray(input)) {
+    return input.map(size => String(size).trim().toUpperCase()).filter(Boolean);
+  }
+
+  if (input === null || input === undefined) {
+    return [];
+  }
+
+  if (typeof input !== 'string') {
+    return parseSizes(String(input));
+  }
+
+  const trimmed = input.trim();
+  if (!trimmed) return [];
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (Array.isArray(parsed)) {
+      return parsed.map(size => String(size).trim().toUpperCase()).filter(Boolean);
+    }
+  } catch (err) {
+    // Fall through to comma-separated parsing.
+  }
+
+  return trimmed
+    .split(',')
+    .map(size => String(size).trim().toUpperCase())
+    .filter(Boolean);
+}
+
+function normalizeSize(value) {
+  return String(value || '').trim().toUpperCase();
+}
+
+function isClothingCategory(category) {
+  return Boolean(category && String(category.category_name || '').trim().toLowerCase() === 'clothing');
+}
+
+function normalizeCategory(category) {
+  const response = { ...category };
+  response.sizes = parseSizes(response.sizes);
+  return response;
+}
+
+function normalizeItem(item) {
+  const response = item.toJSON();
+  if (response.category) {
+    response.category = normalizeCategory(response.category);
+    response.available_sizes = isClothingCategory(response.category) ? response.category.sizes : [];
+  } else {
+    response.available_sizes = [];
+  }
+  return response;
+}
+
+async function resolveItemCategory(payload, fallbackCategoryId) {
+  const categoryId = payload.category_id || payload.categoryId || fallbackCategoryId || null;
+  if (!categoryId) {
+    return { category: null, categoryId: null };
+  }
+
+  const category = await Category.findByPk(categoryId);
+  return { category, categoryId };
+}
+
+function validateItemSize(category, requestedSize, currentSize) {
+  if (!isClothingCategory(category)) {
+    return { size: null };
+  }
+
+  const allowedSizes = parseSizes(category.sizes);
+  if (!allowedSizes.length) {
+    return { error: 'No sizes configured for Clothing category' };
+  }
+
+  const normalizedSize = normalizeSize(requestedSize || currentSize);
+  if (!normalizedSize) {
+    return { error: 'size required for Clothing items' };
+  }
+
+  if (!allowedSizes.includes(normalizedSize) || !CLOTHING_SIZES.includes(normalizedSize)) {
+    return { error: `Invalid size. Allowed sizes: ${allowedSizes.join(', ')}` };
+  }
+
+  return { size: normalizedSize };
+}
+
 exports.list = async (req, res, next) => {
   try {
     const { categoryId, status, q } = req.query;
@@ -23,7 +113,7 @@ exports.list = async (req, res, next) => {
       ],
       order: [['created_at', 'DESC']],
     });
-    const rows = items.map(i => i.toJSON());
+    const rows = items.map(normalizeItem);
     // Keep image fields as stored (data URLs or paths). Frontend can use data URLs directly.
     res.status(200).json({ success: true, code: 200, message: 'OK', data: rows });
   } catch (err) {
@@ -58,7 +148,7 @@ exports.get = async (req, res, next) => {
       }, { model: Category, as: 'category' }],
     });
     if (!item) return res.status(404).json({ success: false, code: 404, message: 'Item not found', data: null });
-    const response = item.toJSON();
+    const response = normalizeItem(item);
     // Return image fields as stored (data URL or path) without writing files.
     res.status(200).json({ success: true, code: 200, message: 'OK', data: response });
   } catch (err) {
@@ -69,9 +159,23 @@ exports.get = async (req, res, next) => {
 exports.create = async (req, res, next) => {
   try {
     const payload = { ...req.body };
+    if (payload.categoryId && !payload.category_id) {
+      payload.category_id = payload.categoryId;
+    }
     if (req.file && req.file.buffer) {
       const b64 = req.file.buffer.toString('base64');
       payload.image = `data:${req.file.mimetype};base64,${b64}`;
+    }
+
+    const { category } = await resolveItemCategory(payload);
+    const sizeCheck = validateItemSize(category, payload.size);
+    if (sizeCheck.error) {
+      return res.status(400).json({ success: false, code: 400, message: sizeCheck.error, data: null });
+    }
+    if (sizeCheck.size) {
+      payload.size = sizeCheck.size;
+    } else {
+      delete payload.size;
     }
 
     // Normalize status value to match model allowed values
@@ -95,9 +199,12 @@ exports.create = async (req, res, next) => {
         model: User,
         as: 'seller',
         attributes: ['user_id', 'username', 'email'],
+      }, {
+        model: Category,
+        as: 'category',
       }],
     });
-    res.status(201).json({ success: true, code: 201, message: 'Created', data: result });
+    res.status(201).json({ success: true, code: 201, message: 'Created', data: normalizeItem(result) });
   } catch (err) {
     next(err);
   }
@@ -108,9 +215,22 @@ exports.update = async (req, res, next) => {
     const item = await Item.findByPk(req.params.id);
     if (!item) return res.status(404).json({ success: false, code: 404, message: 'Item not found', data: null });
     const payload = { ...req.body };
+    if (payload.categoryId && !payload.category_id) {
+      payload.category_id = payload.categoryId;
+    }
     if (req.file && req.file.buffer) {
       const b64 = req.file.buffer.toString('base64');
       payload.image = `data:${req.file.mimetype};base64,${b64}`;
+    }
+    const { category } = await resolveItemCategory(payload, item.category_id);
+    const sizeCheck = validateItemSize(category, payload.size, item.size);
+    if (sizeCheck.error) {
+      return res.status(400).json({ success: false, code: 400, message: sizeCheck.error, data: null });
+    }
+    if (sizeCheck.size) {
+      payload.size = sizeCheck.size;
+    } else {
+      delete payload.size;
     }
     // Normalize status like in create
     if (payload.status && typeof payload.status === 'string') {
@@ -133,7 +253,7 @@ exports.update = async (req, res, next) => {
         { model: Category, as: 'category' }
       ],
     });
-    res.status(200).json({ success: true, code: 200, message: 'OK', data: result });
+    res.status(200).json({ success: true, code: 200, message: 'OK', data: normalizeItem(result) });
   } catch (err) {
     next(err);
   }

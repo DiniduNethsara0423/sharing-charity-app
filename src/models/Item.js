@@ -37,6 +37,10 @@ const Item = sequelize.define('Item', {
     type: DataTypes.TEXT('long'),
     allowNull: true,
   },
+  size: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+  },
   price: {
     type: DataTypes.DECIMAL(10, 2),
   },

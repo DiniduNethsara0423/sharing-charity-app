@@ -15,6 +15,10 @@ const Category = sequelize.define('Category', {
     type: DataTypes.TEXT('long'),
     allowNull: true,
   },
+  sizes: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
 }, {
   tableName: 'category',
   timestamps: true,

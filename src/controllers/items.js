@@ -21,10 +21,10 @@ exports.get = async (req, res, next) => {
 
 exports.create = async (req, res, next) => {
   try {
-    const { seller_id, title, description, category, price, status } = req.body;
+    const { seller_id, title, description, category_id, size, price, status } = req.body;
     const [result] = await db.query(
-      'INSERT INTO item (seller_id, title, description, category, price, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [seller_id, title, description, category, price, status || 'active']
+      'INSERT INTO item (seller_id, title, description, category_id, size, price, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [seller_id, title, description, category_id, size || null, price, status || 'active']
     );
     const [rows] = await db.query('SELECT * FROM item WHERE item_id = ?', [result.insertId]);
     res.status(201).json({ success: true, code: 201, message: 'Created', data: rows[0] });
@@ -35,10 +35,10 @@ exports.create = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
   try {
-    const { title, description, category, price, status } = req.body;
+    const { title, description, category_id, size, price, status } = req.body;
     await db.query(
-      'UPDATE item SET title = ?, description = ?, category = ?, price = ?, status = ? WHERE item_id = ?',
-      [title, description, category, price, status, req.params.id]
+      'UPDATE item SET title = ?, description = ?, category_id = ?, size = ?, price = ?, status = ? WHERE item_id = ?',
+      [title, description, category_id, size || null, price, status, req.params.id]
     );
     const [rows] = await db.query('SELECT * FROM item WHERE item_id = ?', [req.params.id]);
     if (!rows.length) return res.status(404).json({ success: false, code: 404, message: 'Item not found', data: null });

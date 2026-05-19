@@ -8,8 +8,33 @@ const PAYHERE_URL = PAYHERE_SANDBOX ? 'https://sandbox.payhere.lk/pay/checkout' 
 
 exports.createPayment = async (req, res, next) => {
   try {
-    const { buyer_id, seller_id, item_id, amount, currency, first_name, last_name, email, phone, return_url, cancel_url } = req.body;
-    if (!buyer_id || !seller_id || !item_id || !amount) return res.status(400).json({ success: false, code: 400, message: 'Missing required fields', data: null });
+    const body = req.body || {};
+    const buyer_id = body.buyer_id ?? body.buyerId;
+    const seller_id = body.seller_id ?? body.sellerId;
+    const item_id = body.item_id ?? body.itemId;
+    const amount = body.amount;
+    const currency = body.currency;
+    const first_name = body.first_name ?? body.firstName;
+    const last_name = body.last_name ?? body.lastName;
+    const email = body.email;
+    const phone = body.phone;
+    const return_url = body.return_url ?? body.returnUrl;
+    const cancel_url = body.cancel_url ?? body.cancelUrl;
+
+    const missingFields = [];
+    if (buyer_id == null || buyer_id === '') missingFields.push('buyer_id');
+    if (seller_id == null || seller_id === '') missingFields.push('seller_id');
+    if (item_id == null || item_id === '') missingFields.push('item_id');
+    if (amount == null || amount === '') missingFields.push('amount');
+
+    if (missingFields.length) {
+      return res.status(400).json({
+        success: false,
+        code: 400,
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+        data: null,
+      });
+    }
 
     const tx = await Transaction.create({ buyer_id, seller_id, item_id, amount, type: 'payhere', status: 'pending' });
 
