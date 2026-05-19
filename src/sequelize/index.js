@@ -26,7 +26,8 @@ if (process.env.DB_SSL === 'true') {
   } else if (process.env.DB_SSL_ALLOW_SELF_SIGNED === 'true') {
     dialectOptions.ssl = { rejectUnauthorized: false };
   } else {
-    dialectOptions.ssl = { rejectUnauthorized: true };
+    console.warn('DB_SSL is true but no CA provided — allowing self-signed certificates (insecure). Set DB_SSL_CA_PATH or DB_SSL_ALLOW_SELF_SIGNED to change.');
+    dialectOptions.ssl = { rejectUnauthorized: false };
   }
 }
 

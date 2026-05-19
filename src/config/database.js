@@ -24,17 +24,18 @@ if (process.env.DB_SSL === 'true') {
       if (fs.existsSync(caPath)) {
         poolOptions.ssl = { ca: fs.readFileSync(caPath, 'utf8') };
       } else {
-        poolOptions.ssl = { rejectUnauthorized: false };
+            poolOptions.ssl = { rejectUnauthorized: false };
       }
     } catch (err) {
-      poolOptions.ssl = { rejectUnauthorized: false };
+          poolOptions.ssl = { rejectUnauthorized: false };
     }
   } else if (process.env.DB_SSL_CA) {
     poolOptions.ssl = { ca: process.env.DB_SSL_CA };
   } else if (process.env.DB_SSL_ALLOW_SELF_SIGNED === 'true') {
     poolOptions.ssl = { rejectUnauthorized: false };
   } else {
-    poolOptions.ssl = { rejectUnauthorized: true };
+        console.warn('DB_SSL is true but no CA provided — allowing self-signed certificates (insecure). Set DB_SSL_CA_PATH or DB_SSL_ALLOW_SELF_SIGNED to change.');
+        poolOptions.ssl = { rejectUnauthorized: false };
   }
 }
 
