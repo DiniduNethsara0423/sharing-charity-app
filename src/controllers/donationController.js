@@ -1,5 +1,14 @@
 const { Donation, User, Charity, Item } = require('../models');
 
+const normalizeDonationPayload = (body) => ({
+  donor_id: body.donor_id ?? body.donorId ?? body.donorID ?? null,
+  charity_id: body.charity_id ?? body.charityId ?? body.charityID ?? null,
+  item_id: body.item_id ?? body.itemId ?? body.itemID ?? null,
+  status: body.status,
+  gift_location: body.gift_location ?? body.giftLocation,
+  impact: body.impact,
+});
+
 exports.list = async (req, res, next) => {
   try {
     const { q } = req.query;
@@ -78,7 +87,18 @@ exports.get = async (req, res, next) => {
 
 exports.create = async (req, res, next) => {
   try {
-    const donation = await Donation.create(req.body);
+    const payload = normalizeDonationPayload(req.body);
+
+    if (payload.donor_id == null || payload.charity_id == null) {
+      return res.status(400).json({
+        success: false,
+        code: 400,
+        message: 'donor_id and charity_id are required',
+        data: null,
+      });
+    }
+
+    const donation = await Donation.create(payload);
     const result = await Donation.findByPk(donation.donation_id, {
       include: [
         { model: User, as: 'donor', attributes: ['user_id', 'username', 'email', 'device_token'] },
@@ -104,7 +124,8 @@ exports.update = async (req, res, next) => {
   try {
     const donation = await Donation.findByPk(req.params.id);
     if (!donation) return res.status(404).json({ success: false, code: 404, message: 'Donation not found', data: null });
-    await donation.update(req.body);
+    const payload = normalizeDonationPayload(req.body);
+    await donation.update(payload);
     const result = await Donation.findByPk(req.params.id, {
       include: [
         { model: User, as: 'donor', attributes: ['user_id', 'username', 'email'] },
