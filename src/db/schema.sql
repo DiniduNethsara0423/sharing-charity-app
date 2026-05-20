@@ -16,13 +16,27 @@ CREATE TABLE IF NOT EXISTS item (
   seller_id INT NOT NULL,
   title VARCHAR(255) NOT NULL,
   description TEXT,
-  category VARCHAR(100),
+  category_id INT,
+  size VARCHAR(20),
   price DECIMAL(10, 2),
   status VARCHAR(50) DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (seller_id) REFERENCES `user`(user_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS category (
+  category_id INT PRIMARY KEY AUTO_INCREMENT,
+  category_name VARCHAR(150) NOT NULL,
+  image LONGTEXT,
+  sizes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+ALTER TABLE item
+  ADD CONSTRAINT fk_item_category
+  FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE SET NULL;
 
 -- Create TRANSACTION table
 CREATE TABLE IF NOT EXISTS `transaction` (
@@ -58,6 +72,11 @@ CREATE TABLE IF NOT EXISTS donation (
   donor_id INT NOT NULL,
   charity_id INT NOT NULL,
   item_id INT,
+  item_title VARCHAR(255),
+  item_description TEXT,
+  item_category_id INT,
+  item_size VARCHAR(20),
+  item_image LONGTEXT,
   status VARCHAR(50),
   gift_location VARCHAR(255),
   impact TEXT,
@@ -65,7 +84,8 @@ CREATE TABLE IF NOT EXISTS donation (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (donor_id) REFERENCES `user`(user_id) ON DELETE CASCADE,
   FOREIGN KEY (charity_id) REFERENCES charity(charity_id) ON DELETE CASCADE,
-  FOREIGN KEY (item_id) REFERENCES item(item_id) ON DELETE SET NULL
+  FOREIGN KEY (item_id) REFERENCES item(item_id) ON DELETE SET NULL,
+  FOREIGN KEY (item_category_id) REFERENCES category(category_id) ON DELETE SET NULL
 );
 
 -- Create CONVERSATION table for websocket chat threads

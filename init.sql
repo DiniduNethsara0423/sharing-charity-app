@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS `charity_app`;
-USE `charity_app`;
+CREATE DATABASE IF NOT EXISTS `defaultdb`;
+USE `defaultdb`;
 
 CREATE TABLE IF NOT EXISTS `user` (
   user_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -19,13 +19,27 @@ CREATE TABLE IF NOT EXISTS item (
   seller_id INT NOT NULL,
   title VARCHAR(255) NOT NULL,
   description TEXT,
-  category VARCHAR(100),
+  category_id INT,
+  size VARCHAR(20),
   price DECIMAL(10, 2),
   status VARCHAR(50) DEFAULT 'active',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (seller_id) REFERENCES `user`(user_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS category (
+  category_id INT PRIMARY KEY AUTO_INCREMENT,
+  category_name VARCHAR(150) NOT NULL,
+  image LONGTEXT,
+  sizes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+ALTER TABLE item
+  ADD CONSTRAINT fk_item_category
+  FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE SET NULL;
 
 CREATE TABLE IF NOT EXISTS `transaction` (
   transaction_id INT PRIMARY KEY AUTO_INCREMENT,
