@@ -1,10 +1,21 @@
 const crypto = require('crypto');
-const { Transaction } = require('../models');
+const { Transaction, Item } = require('../models');
 
 const MERCHANT_ID = process.env.PAYHERE_MERCHANT_ID || '';
 const PAYHERE_SECRET = process.env.PAYHERE_SECRET || '';
 const PAYHERE_SANDBOX = (process.env.PAYHERE_SANDBOX || 'true') === 'true';
 const PAYHERE_URL = PAYHERE_SANDBOX ? 'https://sandbox.payhere.lk/pay/checkout' : 'https://www.payhere.lk/pay/checkout';
+
+async function markItemSold(itemId) {
+  if (!itemId) {
+    return;
+  }
+
+  const item = await Item.findByPk(itemId);
+  if (item && item.status !== 'sold') {
+    await item.update({ status: 'sold' });
+  }
+}
 
 exports.createPayment = async (req, res, next) => {
   try {
@@ -95,6 +106,9 @@ exports.notify = async (req, res, next) => {
         const tx = await Transaction.findByPk(txId);
         if (tx) {
           await tx.update({ status: success ? 'completed' : 'failed' });
+          if (success) {
+            await markItemSold(tx.item_id);
+          }
         }
       } catch (e) {
         console.error('Failed to update transaction from PayHere notify', e);

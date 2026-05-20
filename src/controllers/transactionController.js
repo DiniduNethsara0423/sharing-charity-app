@@ -1,5 +1,16 @@
 const { Transaction, User, Item } = require('../models');
 
+async function markItemSold(itemId) {
+  if (!itemId) {
+    return;
+  }
+
+  const item = await Item.findByPk(itemId);
+  if (item && item.status !== 'sold') {
+    await item.update({ status: 'sold' });
+  }
+}
+
 exports.list = async (req, res, next) => {
   try {
     const transactions = await Transaction.findAll({
@@ -77,6 +88,9 @@ exports.get = async (req, res, next) => {
 exports.create = async (req, res, next) => {
   try {
     const transaction = await Transaction.create(req.body);
+    if (transaction.status === 'completed') {
+      await markItemSold(transaction.item_id);
+    }
     const result = await Transaction.findByPk(transaction.transaction_id, {
       include: [
         { model: User, as: 'buyer', attributes: ['user_id', 'username', 'email'] },
@@ -95,6 +109,9 @@ exports.update = async (req, res, next) => {
     const transaction = await Transaction.findByPk(req.params.id);
     if (!transaction) return res.status(404).json({ success: false, code: 404, message: 'Transaction not found', data: null });
     await transaction.update(req.body);
+    if (transaction.status === 'completed' || req.body.status === 'completed') {
+      await markItemSold(transaction.item_id);
+    }
     const result = await Transaction.findByPk(req.params.id, {
       include: [
         { model: User, as: 'buyer', attributes: ['user_id', 'username', 'email'] },

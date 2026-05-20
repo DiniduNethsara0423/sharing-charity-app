@@ -1,8 +1,19 @@
 const Stripe = require('stripe');
-const { Transaction } = require('../models');
+const { Transaction, Item } = require('../models');
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY || '';
 const stripe = Stripe(stripeSecret);
+
+async function markItemSold(itemId) {
+  if (!itemId) {
+    return;
+  }
+
+  const item = await Item.findByPk(itemId);
+  if (item && item.status !== 'sold') {
+    await item.update({ status: 'sold' });
+  }
+}
 
 exports.createPayment = async (req, res, next) => {
   try {
@@ -46,6 +57,7 @@ exports.webhook = async (req, res, next) => {
         const tx = await Transaction.findByPk(txId);
         if (tx) {
           await tx.update({ status: 'completed' });
+          await markItemSold(tx.item_id);
         }
       } catch (e) {
         console.error('Failed to update transaction status from webhook', e);
