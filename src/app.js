@@ -11,7 +11,10 @@ const fs = require('fs');
 
 const app = express();
 
-app.use(express.json());
+// Accept larger JSON payloads (base64 images or large objects). Adjust as needed.
+app.use(express.json({ limit: '10mb' }));
+// Also accept larger URL-encoded payloads (forms). Keep consistent with JSON limit.
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // requestLogger logs request/response details to logs/requests.log and console
 app.use(requestLogger);
 app.use(morgan('dev'));
