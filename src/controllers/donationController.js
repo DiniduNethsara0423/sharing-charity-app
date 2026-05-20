@@ -34,13 +34,15 @@ function isClothingCategory(category) {
 }
 
 async function buildDonationItem(body, donorId) {
+  // If an existing item id is provided, just link it
   const itemId = body.item_id ?? body.itemId ?? body.itemID ?? null;
   if (itemId) {
-    return { item_id: itemId, createdItem: null };
+    return { item_id: itemId };
   }
 
-  const title = body.item_name ?? body.itemName ?? body.title ?? body.name;
-  const categoryId = body.category_id ?? body.categoryId ?? body.categoryID ?? null;
+  // Otherwise, store item details directly on the donation row
+  const title = body.item_name ?? body.itemName ?? body.title ?? body.name ?? null;
+  const categoryId = body.item_category_id ?? body.category_id ?? body.categoryId ?? null;
   const size = body.size ?? body.item_size ?? body.itemSize ?? null;
   const image = body.image ?? body.item_image ?? body.itemImage ?? null;
   const description = body.description ?? body.item_description ?? body.itemDescription ?? body.impact ?? null;
@@ -68,18 +70,14 @@ async function buildDonationItem(body, donorId) {
     }
   }
 
-  const createdItem = await Item.create({
-    seller_id: donorId,
-    title,
-    description,
-    category_id: categoryId,
-    size: size ? String(size).trim().toUpperCase() : null,
-    image,
-    price: null,
-    status: 'active',
-  });
-
-  return { item_id: createdItem.item_id, createdItem };
+  return {
+    item_id: null,
+    item_title: title,
+    item_description: description,
+    item_category_id: categoryId,
+    item_size: size ? String(size).trim().toUpperCase() : null,
+    item_image: image,
+  };
 }
 
 const normalizeDonationPayload = (body) => ({
@@ -182,17 +180,12 @@ exports.create = async (req, res, next) => {
 
     const itemResult = await buildDonationItem(req.body, payload.donor_id);
     if (itemResult.error) {
-      return res.status(400).json({
-        success: false,
-        code: 400,
-        message: itemResult.error,
-        data: null,
-      });
+      return res.status(400).json({ success: false, code: 400, message: itemResult.error, data: null });
     }
 
-    if (itemResult.item_id) {
-      payload.item_id = itemResult.item_id;
-    }
+    // Merge itemResult fields into donation payload. If itemResult.item_id is null,
+    // we store item details on the donation row (`item_title`, `item_category_id`, ...).
+    Object.assign(payload, itemResult);
 
     const donation = await Donation.create(payload);
     const result = await Donation.findByPk(donation.donation_id, {
