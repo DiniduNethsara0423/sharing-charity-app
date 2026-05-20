@@ -31,6 +31,30 @@ const Donation = sequelize.define('Donation', {
     },
     onDelete: 'SET NULL',
   },
+  item_title: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+  },
+  item_description: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  item_category_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'category',
+      key: 'category_id',
+    },
+  },
+  item_size: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+  },
+  item_image: {
+    type: DataTypes.TEXT('long'),
+    allowNull: true,
+  },
   status: {
     type: DataTypes.STRING(50),
     defaultValue: 'pending',
