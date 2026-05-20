@@ -1,5 +1,6 @@
 const admin = require('firebase-admin');
 const fs = require('fs');
+const { Notification } = require('../models');
 
 const initFirebase = () => {
   if (admin.apps.length) return admin.app();
@@ -40,6 +41,17 @@ const sendToToken = async (token, notification, data = {}) => {
 
 const sendToUser = async (user, notification, data = {}) => {
   if (!user) return null;
+  try {
+    await Notification.create({
+      user_id: user.user_id,
+      title: notification.title,
+      body: notification.body,
+      type: data.type || null,
+      data,
+    });
+  } catch (err) {
+    console.error('Notification save error:', err);
+  }
   const token = user.device_token;
   return sendToToken(token, notification, data);
 };

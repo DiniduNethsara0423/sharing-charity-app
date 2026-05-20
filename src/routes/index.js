@@ -13,6 +13,7 @@ const payhereController = require('../controllers/payhereController');
 const authRoutes = require('./auth');
 const categoriesRoutes = require('./categories');
 const chatbotRoutes = require('./chatbot.routes');
+const notificationRoutes = require('./notifications');
 // note: `single` already imported above
 
 const router = express.Router();
@@ -73,6 +74,8 @@ router.get('/charities/:id', charityController.get);
 router.post('/charities', charityController.create);
 router.put('/charities/:id', charityController.update);
 router.delete('/charities/:id', charityController.remove);
+
+router.use('/notifications', notificationRoutes);
 
 // Admin dashboard stats (counts)
 router.get('/admin/stats', adminController.stats);

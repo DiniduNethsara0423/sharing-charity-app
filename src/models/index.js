@@ -9,6 +9,7 @@ const ChatbotQuery = require('./ChatbotQuery');
 const Conversation = require('./Conversation');
 const Category = require('./Category');
 const Otp = require('./Otp');
+const Notification = require('./Notification');
 
 // Define Associations
 // User -> Item (one-to-many: user sells items)
@@ -194,6 +195,17 @@ ChatbotQuery.belongsTo(User, {
   as: 'user',
 });
 
+// User -> Notification (one-to-many)
+User.hasMany(Notification, {
+  foreignKey: 'user_id',
+  as: 'notifications',
+  onDelete: 'CASCADE',
+});
+Notification.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user',
+});
+
 module.exports = {
   sequelize,
   User,
@@ -206,4 +218,5 @@ module.exports = {
   Conversation,
   Category,
   Otp,
+  Notification,
 };

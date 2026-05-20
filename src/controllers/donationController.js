@@ -198,7 +198,11 @@ exports.create = async (req, res, next) => {
     try {
       const { sendToUser } = require('../services/fcmService');
       if (result && result.donor) {
-        await sendToUser(result.donor, { title: 'Donation Received', body: `Thank you for donating "${result.item ? result.item.title : 'an item'}".` }, { donation_id: String(result.donation_id) });
+        await sendToUser(
+          result.donor,
+          { title: 'Donation Added Successfully', body: `Your donation was created successfully.` },
+          { type: 'donation_created', donation_id: String(result.donation_id) }
+        );
       }
     } catch (e) {
       console.error('Notification error:', e);

@@ -83,6 +83,13 @@ exports.signin = async (req, res, next) => {
     const response = user.toJSON();
     delete response.password_hash;
 
+    try {
+      const { sendToUser } = require('../services/fcmService');
+      await sendToUser(user, { title: 'Login Successful', body: 'You signed in successfully.' }, { type: 'login_success' });
+    } catch (e) {
+      console.error('Notification error:', e);
+    }
+
     res.status(200).json({ success: true, code: 200, message: 'Sign in successful', data: { token, user: response } });
   } catch (err) {
     next(err);
@@ -181,6 +188,13 @@ exports.googleAuth = async (req, res, next) => {
     const token = generateToken(user.user_id);
     const response = user.toJSON();
     delete response.password_hash;
+
+    try {
+      const { sendToUser } = require('../services/fcmService');
+      await sendToUser(user, { title: 'Login Successful', body: 'You signed in with Google successfully.' }, { type: 'login_success_google' });
+    } catch (e) {
+      console.error('Notification error:', e);
+    }
     res.status(200).json({ success: true, code: 200, message: 'Sign in with Google successful', data: { token, user: response } });
   } catch (err) {
     if (err.message && err.message.includes('configured')) return res.status(500).json({ success: false, code: 500, message: 'Google OAuth not configured on server', data: null });

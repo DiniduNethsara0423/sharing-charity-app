@@ -198,12 +198,24 @@ exports.create = async (req, res, next) => {
       include: [{
         model: User,
         as: 'seller',
-        attributes: ['user_id', 'username', 'email'],
+        attributes: ['user_id', 'username', 'email', 'device_token'],
       }, {
         model: Category,
         as: 'category',
       }],
     });
+    try {
+      const { sendToUser } = require('../services/fcmService');
+      if (result && result.seller) {
+        await sendToUser(
+          result.seller,
+          { title: 'Item Added Successfully', body: `Your item "${result.title}" was added successfully.` },
+          { type: 'item_created', item_id: String(result.item_id) }
+        );
+      }
+    } catch (e) {
+      console.error('Notification error:', e);
+    }
     res.status(201).json({ success: true, code: 201, message: 'Created', data: normalizeItem(result) });
   } catch (err) {
     next(err);
